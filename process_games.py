@@ -13,7 +13,7 @@ def get_unfinished_games():
     # current date will not grab that data from the xml
     query = \
         '''
-            SELECT game_date, game_id \
+            SELECT game_date, game_id, game_status \
             FROM game_proc \
             WHERE game_status != 'FINAL' \
         '''

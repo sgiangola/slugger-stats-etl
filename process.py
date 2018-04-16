@@ -27,7 +27,7 @@ def main(args):
         print('No new games to process')
     if unfinished_games:
         run_stats(unfinished_games)
-        print('Updated {count} games'.format(len(unfinished_games)))
+        print('Updated {count} games'.format(count=len(unfinished_games)))
     else:
         print('No games to update')
     if args.player or args.all:
