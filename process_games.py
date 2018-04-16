@@ -8,6 +8,19 @@ def process(date):
     print('Game processing complete')
 
 
+def get_unfinished_games():
+    # this function is necessary for when a game goes past 12pm EST and the
+    # current date will not grab that data from the xml
+    query = \
+        '''
+            SELECT game_date, game_id \
+            FROM game_proc \
+            WHERE game_status != 'FINAL' \
+        '''
+    results = data_utils.fetch_query(query)
+    return results
+
+
 def update_game_proc():
     ins_sql = \
         '''

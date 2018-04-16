@@ -11,6 +11,9 @@ def main(args):
         date = datetime.now()
     else:
         date = datetime.strptime(args.date, '%Y-%m-%d')
+    # if there are games unfinished that are final but have not been processed
+    # fetch them to get their data (eg. game ended after 12pm EST)
+    unfinished_games = process_games.get_unfinished_games()
     # get all games and their status for a given date and insert to db
     process_games.process(date)
     if args.game_meta_only:
@@ -19,28 +22,41 @@ def main(args):
     games_stats = data_utils.get_unprocessed_games_stats()
     # process stats
     if games_stats:
-        stats_separate = [
-            process_game_stats.parse_stats(game)
-            for game in games_stats
-            ]
-        stats = data_utils.join_units(stats_separate)
-        process_game_stats.upsert(stats)
-        data_utils.mark_games_processed(games_stats, 'stats')
+        run_stats(games_stats)
     else:
-        print('No unprocessed games for stats')
+        print('No new games to process')
+    if unfinished_games:
+        run_stats(unfinished_games)
+        print('Updated {count} games'.format(len(unfinished_games)))
+    else:
+        print('No games to update')
     if args.player or args.all:
         # get games that have not been processed for players
         games_players = data_utils.get_unprocessed_games_player()
         # process players
         if games_players:
-            players_separate = [
-                process_players.parse_players(game) for game in games_players
-                ]
-            players = data_utils.join_units(players_separate)
-            process_players.player_insert_and_update(players)
-            data_utils.mark_games_processed(games_players, 'players')
+            run_players(games_players)
         else:
             print('No unprocessed games for players')
+
+
+def run_stats(games):
+    stats_separate = [
+        process_game_stats.parse_stats(game)
+        for game in games
+        ]
+    stats = data_utils.join_units(stats_separate)
+    process_game_stats.upsert(stats)
+    data_utils.mark_games_processed(games, 'stats')
+
+
+def run_players(games):
+    players_separate = [
+        process_players.parse_players(game) for game in games
+        ]
+    players = data_utils.join_units(players_separate)
+    process_players.player_insert_and_update(players)
+    data_utils.mark_games_processed(games, 'players')
 
 
 if __name__ == '__main__':
